@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
+import os
+import sys
+import transmissionrpc
+
+
+def get_avg(torrents):
+    ratios = [t.ratio for t in torrents]
+    if ratios:
+        return sum(ratios) / len(ratios)
+    return 0
+
+def output():
+    tc = transmissionrpc.Client('10.0.0.3', port=9091)
+    torrents = tc.info().values()
+    priv_torrents = [t for t in torrents if t.fields['isPrivate']]
+    pub_torrents = [t for t in torrents if not t.fields['isPrivate']]
+
+    print('mean.value', get_avg(torrents))
+    print('meanPublic.value', get_avg(pub_torrents))
+    print('meanPrivate.value', get_avg(priv_torrents))
+
+def config():
+    print('graph_title Transmission Ratios')
+    print('graph_category transmission')
+    print('graph_scale no')
+    print('graph_vlabel ratio')
+    print('graph_args --rigid --lower-limit 0 --upper-limit 2')
+    print('mean.label Average')
+    print('meanPublic.label Public')
+    print('meanPrivate.label Private')
+
+if len(sys.argv) == 2 and sys.argv[1] == 'config':
+    config()
+else:
+    output()
+
+
+

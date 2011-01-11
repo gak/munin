@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
+import os
+import sys
+import transmissionrpc
+
+
+def get_state_count(torrents, state):
+    return len(filter(lambda x: x.status == state, torrents))
+
+def output():
+    tc = transmissionrpc.Client('10.0.0.3', port=9091)
+    stats = tc.session_stats()
+    print('activeTorrentCount.value', stats.activeTorrentCount)
+    print('torrentCount.value', stats.torrentCount)
+
+    torrents = tc.info().values()
+    print('downloadingCount.value', get_state_count(torrents, 'downloading'))
+
+    uploadList = [t.fields['peersGettingFromUs'] for t in torrents]
+    uploading = len(filter(lambda a: a, uploadList))
+    print('uploadingCount.value', uploading)
+
+    verifying = get_state_count(torrents, 'check pending')
+    verifying += get_state_count(torrents, 'checking')
+    print('verifyCount.value', verifying)
+
+def config():
+    print('graph_title Transmission Torrents')
+    print('graph_category transmission')
+    print('activeTorrentCount.label Active')
+    print('torrentCount.label Total')
+    print('downloadingCount.label Downloading')
+    print('uploadingCount.label Uploading')
+    print('verifyCount.label Verifying')
+
+if len(sys.argv) == 2 and sys.argv[1] == 'config':
+    config()
+else:
+    output()
+
+
+
